@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Explorateur — PMG Archivist</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="../assets/logo.png" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    .sidebar { background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); color: #e2e8f0; padding: 20px 0; }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .brand img { width: 36px; height: 36px; border-radius: 10px; }
+    .brand h1 { font-size: 17px; font-weight: 700; margin: 0; color: #f8fafc; }
+    .nav { padding: 16px 12px; }
+    .nav a { display: flex; padding: 12px 14px; margin: 4px 0; border-radius: 8px; color: #94a3b8; text-decoration: none; font-weight: 500; }
+    .nav a:hover { background: rgba(255,255,255,.06); color: #e2e8f0; }
+    .nav a.active { background: rgba(13,148,136,.2); color: #5eead4; }
+    .main { padding: 24px; overflow: auto; background: var(--bg); }
+    .top-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .top-bar .btn.back { background: var(--bg-card); }
+    .search-box { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .search-box .input { flex: 1; min-width: 250px; }
+    .search-box select { width: auto; min-width: 110px; }
+    .card { margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 12px 16px; font-size: 11px; color: var(--ink-muted); text-transform: uppercase; background: #f8fafc; border-bottom: 1px solid var(--border); }
+    td { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    tbody tr:hover { background: #f8fafc; cursor: pointer; }
+    .path { max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--ink-muted); }
+    .name { font-weight: 600; }
+    .spacer { flex: 1; }
+    .link { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><img src="../assets/logo.png" alt="" /><h1>PMG Archivist</h1></div>
+      <nav class="nav">
+        <a href="./index.html">📁 Tableau de bord</a>
+        <a href="./explorer.html" class="active">🔍 Explorateur</a>
+        <a href="./history.html">📋 Historique</a>
+        <a href="./settings.html">⚙️ Paramètres</a>
+      </nav>
+    </aside>
+    <main class="main">
+  <div class="wrap" style="max-width: none; margin: 0;">
+    <div class="card" style="padding: 20px;">
+      <h2 style="margin: 0 0 16px;">Explorateur</h2>
+      <div class="search-box">
+        <input class="input" id="q" placeholder="Recherche par nom humain…" />
+        <select id="fDomain">
+          <option value="">Domaine</option>
+          <option>OPS</option><option>HR</option><option>LEGAL</option><option>IT</option><option>FIN</option><option>MKT</option>
+        </select>
+        <select id="fType">
+          <option value="">Type</option>
+          <option>CTR</option><option>INV</option><option>QUO</option><option>REC</option><option>TPL</option><option>SOP</option>
+        </select>
+        <select id="fExt">
+          <option value="">Format</option>
+          <option>.pdf</option><option>.docx</option><option>.jpg</option><option>.png</option>
+        </select>
+        <button class="btn primary" id="btnSearch">Rechercher</button>
+      </div>
+    </div>
+    <div class="card" style="overflow: hidden;">
+      <table>
+        <thead>
+          <tr><th>Nom</th><th>Chemin</th><th>Type</th><th>Format</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  </main>
+  </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    const q = $('q'), fDomain = $('fDomain'), fType = $('fType'), fExt = $('fExt'), tbody = $('tbody');
+    $('btnSearch').onclick = run;
+    q.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+    function esc(s) { return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+    async function run() {
+      const filters = {};
+      if (fDomain.value) filters.domain = fDomain.value;
+      if (fType.value) filters.type = fType.value;
+      if (fExt.value) filters.ext = fExt.value;
+      const rows = await window.archivist.search(q.value.trim(), filters);
+      tbody.innerHTML = '';
+      if (!rows?.length) { tbody.innerHTML = '<tr><td colspan="4" class="muted">Aucun résultat</td></tr>'; return; }
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.onclick = () => location.href = './index.html?focus=' + r.id;
+        tr.innerHTML = `<td class="name">${esc(r.human_desc || r.filename)}</td><td class="path" title="${esc(r.path)}">${esc(r.path)}</td><td>${esc(r.pmg_type || '')}</td><td>${esc(r.ext || '')}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    run();
+  </script>
+</body>
+</html>

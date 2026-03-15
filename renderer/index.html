@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>PMG Auto-Archivist</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="../assets/logo.png" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 64px 1fr; min-height: 100vh; }
+    .sidebar {
+      grid-row: 1 / -1; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      color: #e2e8f0; padding: 20px 0; display: flex; flex-direction: column;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .brand img { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; }
+    .brand h1 { font-size: 17px; font-weight: 700; margin: 0; color: #f8fafc; }
+    .nav { padding: 16px 12px; flex: 1; }
+    .nav a {
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px; margin: 4px 0;
+      border-radius: var(--radius-sm); color: #94a3b8; text-decoration: none;
+      transition: all .15s; font-weight: 500;
+    }
+    .nav a:hover { background: rgba(255,255,255,.06); color: #e2e8f0; }
+    .nav a.active { background: rgba(13, 148, 136, .2); color: #5eead4; }
+    .topbar {
+      grid-column: 2; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; gap: 16px;
+    }
+    .topbar .title { font-size: 18px; font-weight: 700; }
+    .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .content { grid-column: 2; padding: 24px; overflow: auto; }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--bg-card); border-radius: var(--radius); padding: 20px;
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+    }
+    .stat-card h3 { font-size: 12px; color: var(--ink-muted); font-weight: 600; margin: 0 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .stat-card .num { font-size: 26px; font-weight: 800; color: var(--ink); }
+
+    .search-card { margin-bottom: 24px; }
+    .search-card .hd { padding: 16px 20px; border-bottom: 1px solid var(--border); font-weight: 600; }
+    .search-card .bd { padding: 20px; }
+    .search-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .search-row .input { flex: 1; min-width: 200px; }
+    .search-row select { width: auto; min-width: 120px; }
+
+    .results-card { overflow: hidden; }
+    .results-table { width: 100%; border-collapse: collapse; }
+    .results-table th {
+      text-align: left; padding: 12px 16px; font-size: 11px;
+      color: var(--ink-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+      background: #f8fafc; border-bottom: 1px solid var(--border);
+    }
+    .results-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .results-table tbody tr { cursor: pointer; transition: background .1s; }
+    .results-table tbody tr:hover { background: #f8fafc; }
+    .col-name { font-weight: 600; color: var(--ink); }
+    .col-path { max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--ink-muted); }
+    .col-ext { font-family: ui-monospace, monospace; font-size: 12px; color: var(--ink-muted); }
+    .row-actions { display: flex; gap: 6px; }
+    .row-actions .btn { padding: 6px 10px; font-size: 12px; }
+
+    .drawer {
+      position: fixed; right: 0; top: 0; bottom: 0; width: 480px; background: #fff;
+      border-left: 1px solid var(--border); box-shadow: -8px 0 24px rgba(0,0,0,.08);
+      transform: translateX(100%); transition: transform .25s ease;
+      z-index: 100; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .drawer.open { transform: none; }
+    .drawer-hd { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+    .drawer-title { font-weight: 700; font-size: 16px; margin: 0; }
+    .drawer-body { flex: 1; overflow: auto; padding: 20px; }
+    .preview-area {
+      width: 100%; min-height: 300px; max-height: 400px; background: #f1f5f9;
+      border-radius: var(--radius); margin-bottom: 20px; display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .preview-area img, .preview-area video { max-width: 100%; max-height: 400px; object-fit: contain; }
+    .preview-area iframe { width: 100%; height: 400px; border: none; }
+    .preview-area .no-preview { color: var(--ink-muted); padding: 40px; text-align: center; }
+    .kv { display: grid; gap: 12px; }
+    .kv-item { display: grid; grid-template-columns: 120px 1fr; gap: 8px; font-size: 14px; }
+    .kv-item .k { color: var(--ink-muted); }
+    .kv-item .v { font-weight: 500; word-break: break-all; }
+    .drawer-actions { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.4);
+      display: flex; align-items: center; justify-content: center; z-index: 200;
+      opacity: 0; visibility: hidden; transition: all .2s;
+    }
+    .modal-overlay.open { opacity: 1; visibility: visible; }
+    .modal {
+      background: #fff; border-radius: var(--radius); width: 560px; max-width: 95vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2); transform: scale(.96);
+      transition: transform .2s;
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-hd { padding: 20px 24px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 18px; }
+    .modal-bd { padding: 24px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .modal-ft { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+    .source-display { padding: 12px 14px; background: #f8fafc; border-radius: var(--radius-sm); font-size: 13px; color: var(--ink-muted); margin-bottom: 18px; }
+    .source-display strong { color: var(--ink); }
+    .step-indicator { display: flex; gap: 8px; margin-bottom: 24px; }
+    .step { padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; background: #f1f5f9; color: var(--ink-muted); }
+    .step.active { background: var(--brand-soft); color: var(--brand-hover); }
+    .step.done { background: var(--success-soft); color: var(--success); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/logo.png" alt="PMG" />
+        <h1>PMG Archivist</h1>
+      </div>
+      <nav class="nav">
+        <a href="./index.html" class="active">📁 Tableau de bord</a>
+        <a href="./explorer.html">🔍 Explorateur</a>
+        <a href="./history.html">📋 Historique</a>
+        <a href="./settings.html">⚙️ Paramètres</a>
+      </nav>
+    </aside>
+
+    <header class="topbar">
+      <span class="title">Tableau de bord</span>
+      <div class="topbar-actions">
+        <button class="btn primary" id="btnArchive">
+          + Archiver des fichiers
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="stats">
+        <div class="stat-card">
+          <h3>Total archivés</h3>
+          <div class="num" id="statTotal">0</div>
+        </div>
+        <div class="stat-card">
+          <h3>Aujourd'hui</h3>
+          <div class="num" id="statToday">0</div>
+        </div>
+      </div>
+
+      <div class="card search-card">
+        <div class="hd">Rechercher par nom</div>
+        <div class="bd">
+          <div class="search-row">
+            <input class="input" id="q" placeholder="Tapez un mot-clé du nom humain (ex : contrat Julien, facture mars…)" />
+            <select id="fDomain">
+              <option value="">Domaine</option>
+              <option>OPS</option><option>HR</option><option>LEGAL</option><option>IT</option><option>FIN</option><option>MKT</option>
+            </select>
+            <select id="fType">
+              <option value="">Type</option>
+              <option>SOP</option><option>POL</option><option>WI</option><option>CHK</option><option>TPL</option><option>CTR</option><option>MNL</option><option>OFFER</option><option>ASSET</option><option>INV</option><option>QUO</option><option>REC</option>
+            </select>
+            <select id="fExt">
+              <option value="">Format</option>
+              <option>.pdf</option><option>.docx</option><option>.xlsx</option><option>.jpg</option><option>.png</option><option>.mp4</option>
+            </select>
+            <button class="btn primary" id="btnSearch">Rechercher</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card results-card">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Nom humain / Fichier</th>
+              <th>Chemin</th>
+              <th>Type</th>
+              <th>Ext.</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Drawer détail + preview -->
+  <aside id="drawer" class="drawer">
+    <div class="drawer-hd">
+      <h2 class="drawer-title" id="dTitle">—</h2>
+      <button class="btn ghost icon" id="dClose">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="preview-area" id="previewArea">
+        <span class="no-preview">Chargement…</span>
+      </div>
+      <div class="kv">
+        <div class="kv-item"><span class="k">Nom humain</span><span class="v" id="dHuman">—</span></div>
+        <div class="kv-item"><span class="k">Chemin</span><span class="v mono" id="dPath">—</span></div>
+        <div class="kv-item"><span class="k">Dossier</span><span class="v" id="dArch">—</span></div>
+        <div class="kv-item"><span class="k">Statut</span><span class="v" id="dStatus">—</span></div>
+        <div class="kv-item"><span class="k">Taille</span><span class="v" id="dSize">—</span></div>
+        <div class="kv-item"><span class="k">Date</span><span class="v" id="dDate">—</span></div>
+      </div>
+    </div>
+    <div class="drawer-actions">
+      <button class="btn" id="dOpen">📄 Ouvrir</button>
+      <button class="btn" id="dReveal">📂 Voir dans l’explorateur</button>
+    </div>
+  </aside>
+
+  <!-- Modal archivage -->
+  <div id="archiveModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-hd">Archiver des fichiers</div>
+      <div class="modal-bd">
+        <div class="step-indicator">
+          <span class="step" id="step1">1. Choisir</span>
+          <span class="step" id="step2">2. Métadonnées</span>
+        </div>
+        <div id="stepChoose">
+          <p class="muted" style="margin-bottom: 16px;">Sélectionnez un fichier ou un dossier à archiver.</p>
+          <div class="source-display" id="sourceDisplay">Aucun fichier sélectionné</div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn" id="btnPickFile">Choisir un fichier</button>
+            <button class="btn" id="btnPickFolder">Choisir un dossier</button>
+          </div>
+          <button class="btn primary" id="btnNextStep" disabled style="margin-top: 20px;">Continuer</button>
+        </div>
+        <div id="stepMeta" class="hidden">
+          <div class="form-group">
+            <label>Nom humain (recherchable) *</label>
+            <input class="input" id="metaHuman" placeholder="Ex : Contrat Julien Dupont, Facture mars 2025…" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Domaine</label>
+              <select id="metaDomain">
+                <option value="OPS">Standardisation</option>
+                <option value="HR">Ressources humaines</option>
+                <option value="LEGAL">Contrats légaux</option>
+                <option value="IT">Informatique</option>
+                <option value="FIN">Finance</option>
+                <option value="MKT">Marketing</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Type</label>
+              <select id="metaType">
+                <option value="CTR">Contrats</option>
+                <option value="SOP">Procédures</option>
+                <option value="INV">Factures</option>
+                <option value="QUO">Proformas</option>
+                <option value="REC">Reçus</option>
+                <option value="TPL">Templates</option>
+                <option value="POL">Politiques</option>
+                <option value="MNL">Manuels</option>
+                <option value="OFFER">Offres</option>
+                <option value="ASSET">Assets</option>
+                <option value="WI">Instructions</option>
+                <option value="CHK">Listes de contrôle</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Langue</label>
+              <select id="metaLang">
+                <option value="FR">Français</option>
+                <option value="EN">English</option>
+                <option value="HT">Créole</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Statut</label>
+              <select id="metaStatus">
+                <option value="">—</option>
+                <option value="DRAFT">Brouillon</option>
+                <option value="CONTRACT">Contrat</option>
+                <option value="FINAL">Final</option>
+                <option value="REVIEW">En révision</option>
+                <option value="SIGNED">Signé</option>
+                <option value="OTHER">Autre</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-ft" id="modalFt">
+        <button class="btn" id="btnCancelArchive">Annuler</button>
+        <button class="btn primary hidden" id="btnDoArchive">Archiver</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>

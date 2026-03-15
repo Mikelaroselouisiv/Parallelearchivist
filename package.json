@@ -1,0 +1,71 @@
+{
+  "name": "pmg-auto-archivist",
+  "version": "1.0.1",
+  "description": "Archivage automatique PMG (watcher + interface).",
+  "main": "main/main.js",
+  "author": "Parallele Media Groupe",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -r \"npm:dev:electron\"",
+    "dev:electron": "electron .",
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "postinstall": "electron-builder install-app-deps",
+    "build": "electron-builder -mwl",
+    "build:win": "npm run rebuild && electron-builder --win nsis",
+    "build:mac": "npm run rebuild && electron-builder --mac dmg",
+    "icons": "node -e \"require('fs').mkdirSync('build/icons',{recursive:true})\" && icon-gen -i assets/logo.png -o build/icons --ico --icns"
+  },
+  "build": {
+    "appId": "com.pmg.autoarchivist",
+    "productName": "PMG Auto-Archivist",
+    "asar": true,
+    "asarUnpack": ["assets/**"],
+    "files": [
+      "main/**/*",
+      "preload/**/*",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      { "from": "assets/", "to": "assets", "filter": ["**/*"] }
+    ],
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "directories": { "buildResources": "build" },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg"],
+      "icon": "build/icons/app.icns"
+    },
+    "win": {
+      "target": ["nsis"],
+      "publisherName": "Parallele Media Groupe LLC",
+      "icon": "build/icons/app.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PMG Auto-Archivist",
+      "menuCategory": "Parallele Media Groupe",
+      "runAfterFinish": true,
+      "installerIcon": "build/icons/app.ico",
+      "uninstallerIcon": "build/icons/app.ico",
+      "deleteAppDataOnUninstall": false
+    }
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.6.0",
+    "chokidar": "^3.6.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.7.2",
+    "concurrently": "^8.2.2",
+    "electron": "^29.4.0",
+    "electron-builder": "^24.13.3",
+    "icon-gen": "^4.0.0",
+    "wait-on": "^7.2.0"
+  }
+}

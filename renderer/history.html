@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Historique — PMG Archivist</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="../assets/logo.png" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    .sidebar { background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); color: #e2e8f0; padding: 20px 0; }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .brand img { width: 36px; height: 36px; border-radius: 10px; }
+    .brand h1 { font-size: 17px; font-weight: 700; margin: 0; color: #f8fafc; }
+    .nav { padding: 16px 12px; }
+    .nav a { display: flex; padding: 12px 14px; margin: 4px 0; border-radius: 8px; color: #94a3b8; text-decoration: none; font-weight: 500; }
+    .nav a:hover { background: rgba(255,255,255,.06); color: #e2e8f0; }
+    .nav a.active { background: rgba(13,148,136,.2); color: #5eead4; }
+    .main { padding: 24px; overflow: auto; background: var(--bg); }
+    body { margin: 0; }
+    .wrap { padding: 24px; max-width: 1000px; margin: 0 auto; }
+    .top-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .top-bar .btn.back { background: var(--bg-card); }
+    .spacer { flex: 1; }
+    .link { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .link:hover { text-decoration: underline; }
+    .card { margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 12px 16px; font-size: 11px; color: var(--ink-muted); text-transform: uppercase; background: #f8fafc; }
+    td { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    tbody tr:hover { background: #f8fafc; }
+    .path { max-width: 450px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; background: var(--brand-soft); color: var(--brand-hover); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><img src="../assets/logo.png" alt="" /><h1>PMG Archivist</h1></div>
+      <nav class="nav">
+        <a href="./index.html">📁 Tableau de bord</a>
+        <a href="./explorer.html">🔍 Explorateur</a>
+        <a href="./history.html" class="active">📋 Historique</a>
+        <a href="./settings.html">⚙️ Paramètres</a>
+      </nav>
+    </aside>
+    <main class="main">
+  <div class="wrap" style="max-width: none; margin: 0;">
+    <div class="card" style="padding: 20px;">
+      <h2 style="margin: 0 0 8px;">Historique</h2>
+      <p class="muted">Dernières archives</p>
+      <div style="display: flex; gap: 12px; margin-top: 16px;">
+        <input class="input" id="q" placeholder="Filtrer par nom…" style="flex: 1; max-width: 300px;" />
+        <select id="fExt" style="width: auto;">
+          <option value="">Tous formats</option>
+          <option>.pdf</option><option>.docx</option><option>.jpg</option>
+        </select>
+        <button class="btn primary" id="btnFilter">Filtrer</button>
+      </div>
+    </div>
+    <div class="card" style="overflow: hidden;">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Nom</th><th>Chemin</th><th>Dossier</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    const q = $('q'), fExt = $('fExt'), tbody = $('tbody');
+    $('btnFilter').onclick = run;
+    q.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+    function esc(s) { return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+    async function run() {
+      const filters = {};
+      if (fExt.value) filters.ext = fExt.value;
+      const rows = await window.archivist.search(q.value.trim(), filters);
+      rows.sort((a,b) => (b.mtime||0) - (a.mtime||0));
+      tbody.innerHTML = '';
+      if (!rows?.length) { tbody.innerHTML = '<tr><td colspan="4" class="muted">Aucun résultat</td></tr>'; return; }
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.onclick = () => location.href = './index.html?focus=' + r.id;
+        const date = r.mtime ? new Date(r.mtime).toLocaleString() : '—';
+        tr.innerHTML = `<td>${esc(date)}</td><td>${esc(r.human_desc || r.filename)}</td><td class="path" title="${esc(r.path)}">${esc(r.path)}</td><td>${esc(r.archived_to || '')}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    run();
+  </script>
+  </div>
+  </main>
+  </div>
+</body>
+</html>

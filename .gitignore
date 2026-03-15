@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build
+build/
+dist/
+out/
+
+# Electron
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# OS
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

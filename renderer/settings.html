@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Paramètres — PMG Archivist</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="../assets/logo.png" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    .sidebar { background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); color: #e2e8f0; padding: 20px 0; }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .brand img { width: 36px; height: 36px; border-radius: 10px; }
+    .brand h1 { font-size: 17px; font-weight: 700; margin: 0; color: #f8fafc; }
+    .nav { padding: 16px 12px; }
+    .nav a { display: flex; padding: 12px 14px; margin: 4px 0; border-radius: 8px; color: #94a3b8; text-decoration: none; font-weight: 500; }
+    .nav a:hover { background: rgba(255,255,255,.06); color: #e2e8f0; }
+    .nav a.active { background: rgba(13,148,136,.2); color: #5eead4; }
+    .main { padding: 24px; overflow: auto; background: var(--bg); }
+    body { margin: 0; }
+    kbd { font-family: ui-monospace, monospace; font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; border: 1px solid var(--border); }
+    .wrap { padding: 24px; max-width: 640px; margin: 0 auto; }
+    .top-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .top-bar .btn.back { background: var(--bg-card); }
+    .spacer { flex: 1; }
+    .link { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .link:hover { text-decoration: underline; }
+    .card { padding: 24px; margin-bottom: 20px; }
+    .card h3 { margin: 0 0 16px; font-size: 16px; }
+    .card p.muted { margin: 8px 0 0; font-size: 13px; }
+    .row { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><img src="../assets/logo.png" alt="" /><h1>PMG Archivist</h1></div>
+      <nav class="nav">
+        <a href="./index.html">📁 Tableau de bord</a>
+        <a href="./explorer.html">🔍 Explorateur</a>
+        <a href="./history.html">📋 Historique</a>
+        <a href="./settings.html" class="active">⚙️ Paramètres</a>
+      </nav>
+    </aside>
+    <main class="main">
+  <div class="wrap">
+    <div class="card">
+      <h3>Dossier d'archive</h3>
+      <p class="muted">Tous les fichiers archivés seront copiés dans ce dossier.</p>
+      <div class="row" style="margin-top: 16px;">
+        <input class="input" id="archivePath" readonly placeholder="Dossier par défaut" style="flex: 1;" />
+        <button class="btn" id="btnPickArchive">Choisir un dossier</button>
+      </div>
+      <p class="muted" style="margin-top: 8px;">Si aucun dossier n'est sélectionné, le dossier par défaut de l'application est utilisé.</p>
+    </div>
+    <div class="card">
+      <h3>À propos</h3>
+      <p>PMG Auto-Archivist — Archivage basé sur la gouvernance documentaire PMG.</p>
+      <p class="muted">Les fichiers archivés sont copiés dans le dossier d’archive de l’application. Utilisez le bouton « Archiver » depuis le tableau de bord pour ajouter des fichiers ou dossiers.</p>
+    </div>
+    <div class="card">
+      <h3>Raccourcis</h3>
+      <p><kbd>Ctrl</kbd> + <kbd>K</kbd> — Focus sur la recherche</p>
+      <p class="muted">Recherche par nom humain ou par métadonnées (domaine, type, langue).</p>
+    </div>
+    <div class="card">
+      <h3>Formats supportés</h3>
+      <p>Documents : PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF, ODT, ODS, ODP</p>
+      <p>Images : JPG, PNG, GIF, WEBP</p>
+      <p>Vidéos : MP4, MOV, AVI, WEBM, MKV</p>
+    </div>
+  </div>
+  </main>
+  </div>
+  <script>
+    (async function() {
+      const archivePath = document.getElementById('archivePath');
+      const btnPick = document.getElementById('btnPickArchive');
+      try {
+        const root = await window.archivist?.getArchiveRoot?.();
+        archivePath.value = root || '';
+      } catch (e) {
+        console.error('getArchiveRoot:', e);
+        archivePath.placeholder = 'Erreur — redémarrez l\'application';
+      }
+      btnPick.onclick = async () => {
+        const p = await window.archivist?.pickFolder?.();
+        if (p) {
+          await window.archivist?.setArchiveRoot?.(p);
+          archivePath.value = p;
+        }
+      };
+    })();
+  </script>
+</body>
+</html>
