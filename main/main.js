@@ -10,10 +10,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let win;
 
 const iconPath = path.join(__dirname, '../assets/logo.png');
+const iconRenderer = path.join(__dirname, '../renderer/assets/logo.png'); // copie pour le build
 const iconIco = path.join(__dirname, '../build/icons/app.ico');
 
 function createWindow() {
-  const icon = nativeImage.createFromPath(fs.existsSync(iconIco) ? iconIco : iconPath);
+  const iconFile = fs.existsSync(iconIco) ? iconIco : (fs.existsSync(iconPath) ? iconPath : iconRenderer);
+  const icon = nativeImage.createFromPath(iconFile);
   win = new BrowserWindow({
     width: 1200,
     height: 820,

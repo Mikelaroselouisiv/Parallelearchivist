@@ -28,14 +28,14 @@ export const TYPES = {
 
 export const LANGS = { FR: "FR", EN: "EN", HT: "HT" }; // HT = Créole haïtien
 
-/** Statut / catégorie documentaire (contrat, brouillon, final, etc.) */
+/** Statut documentaire (brouillon, template, final, etc.) — pas le type (contrat = CTR en type) */
 export const STATUS = {
-  DRAFT:   "Brouillon",
-  CONTRACT: "Contrat",
-  FINAL:   "Final",
-  REVIEW:  "En révision",
-  SIGNED:  "Signé",
-  OTHER:   "Autre",
+  DRAFT:    "Brouillon",
+  TEMPLATE: "Template",
+  FINAL:    "Final",
+  REVIEW:   "En révision",
+  SIGNED:   "Signé",
+  OTHER:    "Autre",
 };
 
 /** Extensions supportées pour l'archivage */

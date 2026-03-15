@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title>PMG Auto-Archivist</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/png" href="../assets/logo.png" />
+  <link rel="icon" type="image/png" href="./assets/logo.png" />
   <link rel="stylesheet" href="./styles.css" />
   <style>
     .app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 64px 1fr; min-height: 100vh; }
@@ -117,7 +117,7 @@
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
-        <img src="../assets/logo.png" alt="PMG" />
+        <img src="./assets/logo.png" alt="PMG" />
         <h1>PMG Archivist</h1>
       </div>
       <nav class="nav">
@@ -160,7 +160,7 @@
             </select>
             <select id="fType">
               <option value="">Type</option>
-              <option>SOP</option><option>POL</option><option>WI</option><option>CHK</option><option>TPL</option><option>CTR</option><option>MNL</option><option>OFFER</option><option>ASSET</option><option>INV</option><option>QUO</option><option>REC</option>
+              <option>SOP</option><option>POL</option><option>WI</option><option>CHK</option><option>CTR</option><option>MNL</option><option>OFFER</option><option>ASSET</option><option>INV</option><option>QUO</option><option>REC</option>
             </select>
             <select id="fExt">
               <option value="">Format</option>
@@ -251,18 +251,17 @@
             <div class="form-group">
               <label>Type</label>
               <select id="metaType">
-                <option value="CTR">Contrats</option>
-                <option value="SOP">Procédures</option>
-                <option value="INV">Factures</option>
-                <option value="QUO">Proformas</option>
-                <option value="REC">Reçus</option>
-                <option value="TPL">Templates</option>
-                <option value="POL">Politiques</option>
-                <option value="MNL">Manuels</option>
-                <option value="OFFER">Offres</option>
-                <option value="ASSET">Assets</option>
-                <option value="WI">Instructions</option>
-                <option value="CHK">Listes de contrôle</option>
+                <option value="CTR">Contrat</option>
+                <option value="SOP">Procédure</option>
+                <option value="INV">Facture</option>
+                <option value="QUO">Proforma / Devis</option>
+                <option value="REC">Reçu</option>
+                <option value="POL">Politique</option>
+                <option value="MNL">Manuel</option>
+                <option value="OFFER">Offre commerciale</option>
+                <option value="ASSET">Asset</option>
+                <option value="WI">Instruction de travail</option>
+                <option value="CHK">Liste de contrôle</option>
               </select>
             </div>
           </div>
@@ -280,7 +279,7 @@
               <select id="metaStatus">
                 <option value="">—</option>
                 <option value="DRAFT">Brouillon</option>
-                <option value="CONTRACT">Contrat</option>
+                <option value="TEMPLATE">Template</option>
                 <option value="FINAL">Final</option>
                 <option value="REVIEW">En révision</option>
                 <option value="SIGNED">Signé</option>
